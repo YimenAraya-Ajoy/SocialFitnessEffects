@@ -1,0 +1,667 @@
+---
+title: "CodeIndividualBasedSimulation"
+author: "Yimen"
+date: "8/30/2021"
+output: html_document
+---
+
+The code below has the functions for the individual based simulations. Everything is stored in lists so it is easier to do use the different cores in the computer.
+```{r packages}
+require(arm)
+require(dplyr)
+require(MASS)
+library(parallel)
+library(ggplot2)
+require(ggpubr)
+require(RColorBrewer)
+
+cols=brewer.pal(n = 3, name = "Set2")
+alpha=0.2
+```
+
+Below is the main function to simulate the data.
+```{r FunctionSimulate}
+rm(list=ls())
+
+sim2<-function(x){
+  # x is a list with all the parameters to simulate
+  #Generate different lists to store results
+   dAll<-list(IndData=list(), PopData=list())
+   d<-list(Ind=list(), Pop=list())
+   dyears<-list()
+   
+   pop<-data.frame(sim=x$sim, year=1:x$n.years, N0=NA, N1=NA, N=NA, S=NA, z=NA)
+    
+   #Simulate among year variation. This creates the average survival and reproduction for each year.
+   ##VYs is among year variation in survival
+   ##VYr is among year variation in reproduction
+   ##VYrs is the among-year covariance between survival and reproduction
+    MY<-matrix(c(x$VYs, x$VYrs, x$VYrs, x$VYr),2,2)
+    Ys<-mvrnorm(x$n.years, c(0,0), MY)
+    Y<-data.frame(year=1:x$n.years, Yks=Ys[,1], Yrk=Ys[,2])
+    
+    # Simulate individual values for the first generation.
+    ## Adult individuals
+    ## N1 is the number of aldults in the founder population
+    ## VIr is the among individual variance in number of recruits
+    ## VIrs is the among individual variance in survival
+    ## VIrs is a pheniotype that could affect reproduction or survival
+    dA1<-data.frame(ID=1:x$N1, Iri=rnorm(x$N1, 0, x$VIr), Isi=rnorm(x$N1, 0, x$VIs), z=rnorm(x$N1, 0, sqrt(x$VIrs)))
+    dA1$age<-1
+    
+    ##First breeding year individuals are simulated in the same way
+    dJ1<-data.frame(ID=(x$N1+1):(x$N0+x$N1), Iri=rnorm(x$N0, 0, x$VIr), Isi=rnorm(x$N0, 0, x$VIs), z=rnorm(x$N0, 0, sqrt(x$VIrs)))
+    dJ1$age<-0
+    
+    ###Combine the adult and juvenile data
+    d1<-rbind(dA1, dJ1)
+    
+    ###Average phenotype in the founder population
+    d1$z_bar<-mean(d1$z)
+    
+    ###Adds the year means for all individuals in the same year
+    d1$year<-1
+    d1$Yks<-Y$Yks[1] 
+    d1$Yrk<- Y$Yrk[1]
+    
+    ###Adds the starting population sizes of juveniles and adults
+    d1$N0<-x$N0
+    d1$N1<-x$N1
+    d1$N<-(x$N1+x$N0)
+    
+    ###Generate residual values for each year (i.e) stocahsiticity affecting an individuals reproduction or survival in a given year
+    MR<-matrix(c(x$Vss, x$Vsrs, x$Vsrs, x$Vsr),2,2)
+    Es<-mvrnorm(nrow(d1), c(0,0), MR)
+     
+    ##Model survival
+    d1$sm <- x$s + d1$Isi + x$Bzs*(d1$z) + d1$Yks  + d1$N*x$Gs + Es[,1]
+    d1$pr = (1/(1+exp(-d1$sm))) ### transform to individual survival probabilities
+    d1$surv<-rbinom(length(d1$sm),1,d1$pr) ###Realization for survival
+    
+    ###Model reproduction
+    d1$rm<- x$r + d1$Iri + x$Bzr*(d1$z) + d1$Yrk  + d1$N*x$Gr +  Es[,2]
+    d1$recruits<-rpois(length(d1$rm), exp(d1$rm)) ##The exponent of the latent trait defines the mean     for the poisson process
+    
+    ### Add reproduction and survival to estimate yearly individual fitness
+    d1$w<-d1$recruits + d1$surv 
+    d1$rw<-d1$w/mean(d1$w) ####Relative fitness
+    
+    ##Create a dataframe with population level parameters
+    pop$sim[1]<-x$sim
+    pop$N0[1]<-x$N0
+    pop$N1[1]<-x$N1
+    pop$N[1]<-x$N0+x$N1
+    pop$lambda[1]<-sum(d1$recruits + d1$surv)/(N0+N1)
+    pop$z[1]<-d1$z_bar[1]
+    pop$deltaz[1]<-d1$z_bar[1]+cov(d1$z, d1$rw)
+
+    ##Store the individual data in a list 
+    dyears[[1]]<-d1 
+    
+    #Other generations (year). 
+    ##The tryCatch function prevents the loop to abort if there is and error.
+    tryCatch({
+      for(i in 2:x$n.years){
+    
+    ##Create temporary data with individuals of the previous gen.
+        dtmp<-as.data.frame(dyears[[i-1]])
+  
+     ###Survival adults
+        dA2<-dtmp[dtmp$surv==1, c("ID", "Iri", "Isi", "z")]
+        dA2$age<-1 + dtmp$age[dtmp$surv==1]
+    
+    ###Creat the new recruting indivdiuals. They have the same characteristics of the parents         
+        Iri=rep(dtmp$Iri, dtmp$recruits)
+        Isi=rep(dtmp$Isi, dtmp$recruits)
+        z=rep(dtmp$z, dtmp$recruits)
+    
+    ####If there are new recruits it creates there phneotypes and intrinsic survival and reproduction         merits.      
+          if (length(Iri)>0) {
+          dJ2<-data.frame(ID=paste(i, rep(dtmp$ID, dtmp$recruits), 1:sum(dtmp$recruits)))
+          dJ2$Iri=Iri*x$h2r + rnorm(length(Iri), 0, sqrt(x$VIr-x$h2r^2))
+          dJ2$Isi=Isi*x$h2s + rnorm(length(Isi), 0, sqrt(x$VIs-x$h2s^2))
+          dJ2$z= z + rnorm(length(z), 0, sqrt(0.5))
+          dJ2$age<-0
+          }
+          
+    ### If some individuals survive and some reproduced combines the data into d2
+         if(nrow(dA2)>0 & length(Iri)>0){
+            d2<-rbind(dA2,  dJ2)
+          }
+    
+    ### If some individuals survive and but nobody reproduced d2 is composed by only adults of previous year 
+         if(nrow(dA2)>0 & length(Iri)==0){
+            d2<-dA2
+          }
+  ### No adult survives but some reprodcue, d2 is composed of only juveniles.       
+         if(nrow(dA2)==0 & length(Iri)>0){
+            d2<-dJ2
+          }
+
+  ### If there is no reproduction and no one survives end the loop          
+        if(nrow(dA2)==0 & length(Iri)==0){
+            break
+          }
+        
+        d2$year<-i  ##Add year to the individual data
+        d2$Yks<-Y$Yks[i] ##Add average year survival to the individual data
+        d2$Yrk<- Y$Yrk[i] ##Add average year reproduction to the individual data
+       
+        d2$N0<-sum(dtmp$recruits) ##Number of juveniles
+        d2$N1<-sum(dtmp$surv) ##Number of adults
+        d2$N<-sum(dtmp$recruits + dtmp$surv) ##Population size 
+        
+        ###Stocastic variation for individuals yearly survival and reproduction
+        MR<-matrix(c(x$Vss, x$Vsrs, x$Vsrs, x$Vsr),2,2)
+        Es<-mvrnorm(nrow(d2), c(0,0), MR)
+        
+        ##Age as a categorical value and mean phenotype
+        age2<-d2$age
+        age2[d2$age>0]<-1
+        d2$z_bar<-mean(c(dA2$z,dJ2$z))
+        
+        ##Same as for the founder population but with extra terms reflecting the interactions between population size and mean phenotype
+        d2$sm <- x$s + x$as*age2  + d2$Isi + d2$Yks + x$Bzs*d2$z +  d2$N*x$Gs +  x$BZs*d2$z_bar + x$BZns*d2$N*d2$z_bar + x$Bzns*d2$N*d2$z  + x$BZzs*d2$z*d2$z_bar+ x$BZzns*d2$z*d2$z_bar*d2$N + Es[,1]
+        
+        d2$pr = (1/(1+exp(-d2$sm)))  
+        d2$surv<-rbinom(length(d2$sm),1,d2$pr) 
+        
+        d2$rm<-x$r + x$ar*age2 +  d2$Iri + d2$Yrk + x$Bzr*d2$z + x$Bzr2*d2$z^2 +  d2$N*x$Gr +  x$BZr*d2$z_bar + x$BZnr*d2$N*d2$z_bar + x$Bznr*d2$N*d2$z  + x$BZzr*d2$z*d2$z_bar+ x$BZznr*d2$z*d2$z_bar*d2$N + Es[,2]  
+        d2$recruits<-rpois(length(d2$rm), exp(d2$rm))
+       
+        d2$w<-d2$recruits + d2$surv
+        d2$rw<-d2$w/mean(d2$w)
+        
+        dyears[[i]]<-d2
+        
+        pop$sim[i]<-x$sim ##Simulation ID
+        pop$N0[i]<-sum(dtmp$recruits)
+        pop$N1[i]<-sum(dtmp$surv)
+        pop$N[i]<- sum(dtmp$recruits + dtmp$surv)
+        pop$z[i]<-d2$z_bar[1]
+        pop$lambda[i]<- sum(d2$recruits + d2$surv)/pop$N[i]
+        pop$deltaz[i]<-mean(d2$z)+cov(d2$z, d2$rw) ##Expected change in mean phenotype
+              }
+    }, error=function(e){})
+  
+    ##Combine individual data for all years
+    dtmp1<-do.call(rbind.data.frame, dyears)
+    dtmp1$sim<-x$sim ##Simulation ID
+    dAll$IndData<-dtmp1 ##Get it into a list
+    dAll$PopData<-pop ##Get population data into a list
+    dAll
+    }
+
+
+##Creates a list of parameter values for the simulations to use lapply to generate all simulations
+sim.pops<-function(n.years=10, n.sims=1, s, r, VYs=0, VYr=0, VYrs=0, VIs=0, VIr=0, VIrs=0, h2r=0, h2s=0, h2rs=0, Vss=0, Vsr=0, Vsrs=0, Gs=0, Gr=0, N0=10, N1=10, ar=0, as=0, Bzr=0, Bzr2=0, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0, Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0 )
+{  
+lists<-list()
+d<-list()
+
+for(j in 1:n.sims){
+lists[[j]]<-data.frame(n.years=n.years, s=s, r=r, VYs=VYs, VYr=VYr, VYrs=VYrs, VIs=VYrs, VIr=VIr, VIrs=VIrs, h2r=h2r, h2s=h2s, h2rs=h2rs, Vss=Vss, Vsr=Vsr, Vsrs=Vsrs, Gs=Gs, Gr=Gr, N0=N0, N1=N1, ar=ar, as=as, Bzr=Bzr, Bzr2=Bzr2, Bzs=Bzs, BZr=BZr, BZs=BZs, BZnr=BZnr, BZns=BZns, Bznr=Bznr, Bzns=Bzns, BZzr=BZzr,  BZzs=BZzs, BZznr=BZznr,  BZzns=BZzns, sim=j) 
+}    
+ 
+res<-mclapply(lists, sim2, mc.cores=4)
+d$Ind<-do.call(rbind.data.frame, lapply(res, '[[', 1))
+d$Pop<-do.call(rbind.data.frame, lapply(res, '[[', 2))
+d$Params<-as.data.frame(lists[1])
+d
+}
+
+
+
+
+```
+
+Below is a bunch of functions to analyze the data. We can look at this later.
+```{r FunctionAnalyze}
+Nbar<-function(x,y,z){
+mp1<-tapply(x$Pop$N, x$Pop$year, mean, na.rm=TRUE)
+mpd1<-data.frame(year=1:length(mp1), N=mp1, scen="1")
+
+mp2<-tapply(y$Pop$N, y$Pop$year, mean, na.rm=TRUE) 
+mpd2<-data.frame(year=1:length(mp2), N=mp2, scen="2")
+
+mp3<-tapply(z$Pop$N, z$Pop$year, mean, na.rm=TRUE)
+mpd3<-data.frame(year=1:length(mp3), N=mp3, scen="3")
+
+mpd<-rbind(mpd1,mpd2,mpd3)
+mpd
+}
+
+zbar<-function(x,y,z){
+mp1<-tapply(x$Pop$z, x$Pop$year, mean, na.rm=TRUE)
+mpd1<-data.frame(year=1:length(mp1), z=mp1, scen="1")
+
+mp2<-tapply(y$Pop$z, y$Pop$year, mean, na.rm=TRUE) 
+mpd2<-data.frame(year=1:length(mp2), z=mp2, scen="2")
+
+mp3<-tapply(z$Pop$z, z$Pop$year, mean, na.rm=TRUE)
+mpd3<-data.frame(year=1:length(mp3), z=mp3, scen="3")
+
+mpd<-rbind(mpd1,mpd2,mpd3)
+mpd
+}
+
+Ext<-function(x,y,z){
+x$Pop$Ext<-is.na(x$Pop$N)
+x$Pop$Ext<-as.numeric(x$Pop$Ext)
+Ext<-tapply(x$Pop$Ext, x$Pop$year, sum)/n.sims 
+med1<-data.frame(year=1:length(Ext), e=Ext, scen="1")
+
+y$Pop$Ext<-is.na(y$Pop$N)
+y$Pop$Ext<-as.numeric(y$Pop$Ext)
+Ext2<-tapply(y$Pop$Ext, y$Pop$year, sum)/n.sims 
+med2<-data.frame(year=1:length(Ext2), e=Ext2, scen="2")
+
+z$Pop$Ext<-is.na(z$Pop$N)
+z$Pop$Ext<-as.numeric(z$Pop$Ext)
+Ext3<-tapply(z$Pop$Ext, z$Pop$year, sum)/n.sims 
+med3<-data.frame(year=1:length(Ext3), e=Ext3, scen="3")
+
+med<-rbind(med1,med2,med3)
+med
+}
+
+
+
+model.1<-function(x){
+mod<-lm(w~N, data=x)
+B1=coef(mod)[1]
+Bn=coef(mod)[2]
+
+EN=as.vector(-(B1-1)/Bn)
+
+res<-data.frame(N=x$N[x$year==100][1], z=mean(x$z[x$year==100]), EN=EN, Ez=NA)
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+
+model.2<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~N + z + z2, data=x)
+B1=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+zp=(-Bl/(2*Bq))
+EN=as.vector(-(B1 + Bl*zp + Bq*zp^2+Bq*var(x$z[x$year==100])-1)/Bn)
+
+res<-data.frame(N=x$N[x$year==100][1], z=mean(x$z[x$year==100]), EN=EN, Ez=zp)
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+model.3<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~N + z + z2 +  z_bar , data=x)
+B1=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+Bz=coef(mod)[5]
+zp=(-Bl/(2*Bq))
+
+EN=(-1 + B1 + Bl*zp + Bz*zp+  Bq*zp^2  + Bq*var(x$z[x$year==100]))/-(Bn)
+
+
+res<-data.frame(N=x$N[x$year==100][1], z=mean(x$z[x$year==100]), EN=EN, Ez=zp)
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+model.4<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~ N + z + z2 + z_bar + z_bar:N , data=x)
+B1=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+Bz=coef(mod)[5]
+Bnz=coef(mod)[6]
+zp=(-Bl/(2*Bq))
+
+EN=(-1 + B1 + Bl*zp + Bz*zp+  Bq*zp^2  + Bq*var(x$z[x$year==100]))/-(Bn + Bnz*zp)
+
+
+res<-data.frame(N=x$N[x$year==100][1], z=mean(x$z[x$year==100]), EN=EN, Ez=zp)
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+model.5<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~ N + z + z2 + z:N  , data=x)
+B0=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+Bzn=coef(mod)[5]
+N=x$N[x$year==100][1]
+s=var(x$z[x$year==100])
+
+zp<--(Bl - (Bl*Bzn - 2*Bn*Bq + 2*sqrt(Bq^2*Bzn^2*s + B0*Bq*Bzn^2 - Bl*Bn*Bq*Bzn + Bn^2*Bq^2 - Bq*Bzn^2))/Bzn)/(2*Bq)
+
+EN=-(Bl*Bzn - 2*Bn*Bq + 2*sqrt(Bq^2*Bzn^2*s + B0*Bq*Bzn^2 - Bl*Bn*Bq*Bzn + Bn^2*Bq^2 - Bq*Bzn^2))/Bzn^2
+res<-data.frame(EN=EN, N=N, Ez=zp, z=mean(x$z[x$year==100]))
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+model.6<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~ N + z + z2 + z_bar + z:z_bar  , data=x)
+B0=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+Bz=coef(mod)[5]
+Bzz=coef(mod)[6]
+zp<--(Bl)/(2*Bq + Bzz)
+
+EN=(-1 + B0 + (Bl + Bz)*zp  +  (Bzz + Bq)*zp^2 + Bq*var(x$z[x$year==100]))/-Bn
+
+res<-data.frame(N=x$N[x$year==100][1], z=mean(x$z[x$year==100]), EN=EN, Ez=zp)
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+model.7<-function(x){
+x$z2<-x$z^2
+mod<-lm(w~ N + z + z2 + z_bar + z_bar:N + z:N + z_bar:z + z_bar:N:z, data=x)
+B0=coef(mod)[1]
+Bn=coef(mod)[2]
+Bl=coef(mod)[3]
+Bq=coef(mod)[4]
+Bz=coef(mod)[5]
+BNZ=coef(mod)[6]
+BNz=coef(mod)[7]
+BZz=coef(mod)[8]
+BNZz=coef(mod)[9]
+
+N=x$N[x$year==100][1]
+
+zp<--(Bl + BNz*N)/(2*Bq + BZz + BNZz*N)
+
+EN=(-1 + B0 + (Bl + Bz)*zp  +  (BZz + Bq)*zp^2 + Bq*var(x$z[x$year==100]))/-(Bn + BNz*zp + BNZz*zp^2 + BNZ*zp) 
+
+res<-data.frame(EN=EN, N=N, Ez=zp, z=mean(x$z[x$year==100]))
+res$biasN=as.vector(res$EN-res$N)
+res
+}
+
+
+
+bias<-function(x,y,z, model){
+ld3<-ld2<-ld1<-list()
+ 
+for(i in 1:n.sims){
+ld1[[i]]<-as.data.frame(x$Ind[x$Ind$sim==i,])
+ld2[[i]]<-as.data.frame(y$Ind[y$Ind$sim==i,])
+ld3[[i]]<-as.data.frame(z$Ind[z$Ind$sim==i,])
+}
+
+an1<-do.call(rbind.data.frame,mclapply(ld1, model, mc.cores=3))
+an2<-do.call(rbind.data.frame,mclapply(ld2, model, mc.cores=3))
+an3<-do.call(rbind.data.frame,mclapply(ld3, model, mc.cores=3))
+b<-rbind(apply(an1,2,mean, na.rm=TRUE), apply(an2,2,mean, na.rm=TRUE), apply(an3,2,mean, na.rm=TRUE))
+}
+
+param<-function(x,y,z){
+p<-c("Gr", "Bzr", "Bzr2", "BZr", "BZnr", "BZzr", "Bznr", "BZznr")  
+rbind(x$Params[,p], y$Params[,p], z$Params[,p])
+}
+
+```
+
+The first scenario of the ms I sent.
+##Density regulation
+```{r SelectionSimulation, cache=TRUE}
+n.years<-100
+n.sims<-100
+N0<-5
+N1<-5
+s<--0.1
+r<-0.1
+Gr<--0.02
+Gs<--0.000
+
+res1<-sim.pops(n.years=n.years, n.sims=n.sims, s=s, r=r, VIrs=1, h2rs=0.99, Gs=Gs, Gr=Gr, N0=N0, N1=N1, Bzr=0,  Bzr2 =0, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0,  Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0)
+
+res2<-sim.pops(n.years=n.years, n.sims=n.sims, s=s, r=r, VIrs=1, h2rs=0.99, Gs=Gs, Gr=Gr, N0=N0, N1=N1, Bzr=0.2,  Bzr2 =-0.02, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0,  Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0 )
+
+res3<-sim.pops(n.years=n.years, n.sims=n.sims, s=s, r=r, VIrs=1, h2rs=0.99, Gs=Gs, Gr=Gr, N0=N0, N1=N1, Bzr=-0.2,  Bzr2 =-0.02, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0,  Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0 )
+
+mpd2<-Nbar(res1,res2,res3)
+mzd2<-zbar(res1,res2,res3)
+med2<-Ext(res1,res2,res3)
+bias2<-bias(res1,res2,res3, model.2)
+par2<-param(res1, res2, res3)
+
+BiasPar2<-cbind(bias2,par2)
+
+```
+
+```{r SelectionFigure}
+p3<-ggplot(mpd2, aes(x = year, y = N, color=scen)) + geom_line( show.legend = FALSE)+ scale_color_manual(values=cols)   + geom_line(data = res1$Pop, alpha = alpha, col=cols[1])  + geom_line(data = res2$Pop, alpha = alpha, col=cols[2]) + geom_line(data = res3$Pop, alpha = alpha, col=cols[3]) + theme_classic()  + labs(title="B)", x="Year", y = "N") + ylim(0,120) + theme(legend.text.align = 0)
+
+p4<-ggplot(mzd2, aes(x = year, y = z, color=scen)) + geom_line(alpha = .8) + scale_color_manual(values=cols, 
+                       name="Parameters",
+                       breaks=c("1", "2", "3"),
+labels=c(expression(paste(beta[n],"=-0.02,  ",   beta[z],"=0")),expression(paste(beta[n],"=-0.2, ",   beta[z],"=0.02 ")),expression(paste(beta[n],"=-0.02,",   beta[z],"=-0.02"))))  + geom_line(data = res1$Pop, alpha = alpha, col=cols[1])  + geom_line(data = res2$Pop, alpha = alpha, col=cols[2]) + geom_line(data = res3$Pop, alpha = alpha, col=cols[3]) + theme_classic()  + labs(title="", x="Year", y = "Mean phenotype (z)") + ylim(-10,20) + theme(legend.text.align = 0)
+
+ggarrange( p3,  p4, ncol=2, nrow=1, widths=c(1,1.4)) 
+
+```
+
+We can check step by step what the code to simulate the data does by creating a data frame with parameter values we need.
+```{r}
+
+n.years<-100
+n.sims<-100
+N0<-5
+N1<-5
+s<--0.1
+r<-0.1
+Gr<--0.01
+Gs<--0.000
+
+x<-data.frame(n.years=n.years, s=s, r=r, VYs=0, VYr=0, VYrs=0, VIs=1, VIr=1, VIrs=1, h2r=1, h2s=1, h2rs=1, Vss=0, Vsr=0, Vsrs=0, Gs=Gs, Gr=Gr, N0=N0, N1=N1, ar=0, as=0, Bzr=0, Bzr2=0, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0, Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0, sim=1) 
+
+
+  # x is a list with all the parameters to simulate
+  #Generate different lists to store results
+   dAll<-list(IndData=list(), PopData=list())
+   d<-list(Ind=list(), Pop=list())
+   dyears<-list()
+   
+   pop<-data.frame(sim=x$sim, year=1:x$n.years, N0=NA, N1=NA, N=NA, S=NA, z=NA)
+    
+   #Simulate among year variation. This creates the average survival and reproduction for each year.
+   ##VYs is among year variation in survival
+   ##VYr is among year variation in reproduction
+   ##VYrs is the among-year covariance between survival and reproduction
+    MY<-matrix(c(x$VYs, x$VYrs, x$VYrs, x$VYr),2,2)
+    Ys<-mvrnorm(x$n.years, c(0,0), MY)
+    Y<-data.frame(year=1:x$n.years, Yks=Ys[,1], Yrk=Ys[,2])
+    
+    # Simulate individual values for the first generation.
+    ## Adult individuals
+    ## N1 is the number of aldults in the founder population
+    ## VIr is the among individual variance in number of recruits
+    ## VIrs is the among individual variance in survival
+    ## VIrs is a pheniotype that could affect reproduction or survival
+    dA1<-data.frame(ID=1:x$N1, Iri=rnorm(x$N1, 0, x$VIr), Isi=rnorm(x$N1, 0, x$VIs), z=rnorm(x$N1, 0, sqrt(x$VIrs)))
+    dA1$age<-1
+    
+    ##First breeding year individuals are simulated in the same way
+    dJ1<-data.frame(ID=(x$N1+1):(x$N0+x$N1), Iri=rnorm(x$N0, 0, x$VIr), Isi=rnorm(x$N0, 0, x$VIs), z=rnorm(x$N0, 0, sqrt(x$VIrs)))
+    dJ1$age<-0
+    
+    ###Combine the adult and juvenile data
+    d1<-rbind(dA1, dJ1)
+    
+    ###Average phenotype in the founder population
+    d1$z_bar<-mean(d1$z)
+    
+    ###Adds the year means for all individuals in the same year
+    d1$year<-1
+    d1$Yks<-Y$Yks[1] 
+    d1$Yrk<- Y$Yrk[1]
+    
+    ###Adds the starting population sizes of juveniles and adults
+    d1$N0<-x$N0
+    d1$N1<-x$N1
+    d1$N<-(x$N1+x$N0)
+    
+    ###Generate residual values for each year (i.e) stocahsiticity affecting an individuals reproduction or survival in a given year
+    MR<-matrix(c(x$Vss, x$Vsrs, x$Vsrs, x$Vsr),2,2)
+    Es<-mvrnorm(nrow(d1), c(0,0), MR)
+     
+    ##Model survival
+    d1$sm <- x$s + d1$Isi + x$Bzs*(d1$z) + d1$Yks  + d1$N*x$Gs + Es[,1]
+    d1$pr = (1/(1+exp(-d1$sm))) ### transform to individual survival probabilities
+    d1$surv<-rbinom(length(d1$sm),1,d1$pr) ###Realization for survival
+    
+    ###Model reproduction
+    d1$rm<- x$r + d1$Iri + x$Bzr*(d1$z) + d1$Yrk  + d1$N*x$Gr +  Es[,2]
+    d1$recruits<-rpois(length(d1$rm), exp(d1$rm)) ##The exponent of the latent trait defines the mean     for the poisson process
+    
+    ### Add reproduction and survival to estimate yearly individual fitness
+    d1$w<-d1$recruits + d1$surv 
+    d1$rw<-d1$w/mean(d1$w) ####Relative fitness
+    
+    ##Create a dataframe with population level parameters
+    pop$sim[1]<-x$sim
+    pop$N0[1]<-x$N0
+    pop$N1[1]<-x$N1
+    pop$N[1]<-x$N0+x$N1
+    pop$lambda[1]<-sum(d1$recruits + d1$surv)/(N0+N1)
+    pop$z[1]<-d1$z_bar[1]
+    pop$deltaz[1]<-d1$z_bar[1]+cov(d1$z, d1$rw)
+
+    ##Store the individual data in a list 
+    dyears[[1]]<-d1 
+    
+    #Other generations (year). 
+    ##The tryCatch function prevents the loop to abort if there is and error.
+    tryCatch({
+      for(i in 2:x$n.years){
+    i=2
+    ##Create temporary data with individuals of the previous gen.
+        dtmp<-as.data.frame(dyears[[i-1]])
+  
+     ###Survival adults
+        dA2<-dtmp[dtmp$surv==1, c("ID", "Iri", "Isi", "z")]
+        dA2$age<-1 + dtmp$age[dtmp$surv==1]
+    
+    ###Creat the new recruting indivdiuals. They have the same characteristics of the parents         
+        Iri=rep(dtmp$Iri, dtmp$recruits)
+        Isi=rep(dtmp$Isi, dtmp$recruits)
+        z=rep(dtmp$z, dtmp$recruits)
+    
+    ####If there are new recruits it creates there phneotypes and intrinsic survival and reproduction         merits.      
+          if (length(Iri)>0) {
+          dJ2<-data.frame(ID=paste(i, rep(dtmp$ID, dtmp$recruits), 1:sum(dtmp$recruits)))
+          dJ2$Iri=Iri*x$h2r + rnorm(length(Iri), 0, sqrt(x$VIr-x$h2r^2))
+          dJ2$Isi=Isi*x$h2s + rnorm(length(Isi), 0, sqrt(x$VIs-x$h2s^2))
+          dJ2$z= z + rnorm(length(z), 0, sqrt(0.5))
+          dJ2$age<-0
+          }
+          
+    ### If some individuals survive and some reproduced combines the data into d2
+         if(nrow(dA2)>0 & length(Iri)>0){
+            d2<-rbind(dA2,  dJ2)
+          }
+    
+    ### If some individuals survive and but nobody reproduced d2 is composed by only adults of previous year 
+         if(nrow(dA2)>0 & length(Iri)==0){
+            d2<-dA2
+          }
+  ### No adult survives but some reprodcue, d2 is composed of only juveniles.       
+         if(nrow(dA2)==0 & length(Iri)>0){
+            d2<-dJ2
+          }
+
+  ### If there is no reproduction and no one survives end the loop          
+        if(nrow(dA2)==0 & length(Iri)==0){
+            break
+          }
+        
+        d2$year<-i  ##Add year to the individual data
+        d2$Yks<-Y$Yks[i] ##Add average year survival to the individual data
+        d2$Yrk<- Y$Yrk[i] ##Add average year reproduction to the individual data
+       
+        d2$N0<-sum(dtmp$recruits) ##Number of juveniles
+        d2$N1<-sum(dtmp$surv) ##Number of adults
+        d2$N<-sum(dtmp$recruits + dtmp$surv) ##Population size 
+        
+        ###Stocastic variation for individuals yearly survival and reproduction
+        MR<-matrix(c(x$Vss, x$Vsrs, x$Vsrs, x$Vsr),2,2)
+        Es<-mvrnorm(nrow(d2), c(0,0), MR)
+        
+        ##Age as a categorical value and mean phenotype
+        age2<-d2$age
+        age2[d2$age>0]<-1
+        d2$z_bar<-mean(c(dA2$z,dJ2$z))
+        
+        ##Same as for the founder population but with extra terms reflecting the interactions between population size and mean phenotype
+        d2$sm <- x$s + x$as*age2  + d2$Isi + d2$Yks + x$Bzs*d2$z +  d2$N*x$Gs +  x$BZs*d2$z_bar + x$BZns*d2$N*d2$z_bar + x$Bzns*d2$N*d2$z  + x$BZzs*d2$z*d2$z_bar+ x$BZzns*d2$z*d2$z_bar*d2$N + Es[,1]
+        
+        d2$pr = (1/(1+exp(-d2$sm)))  
+        d2$surv<-rbinom(length(d2$sm),1,d2$pr) 
+        
+        d2$rm<-x$r + x$ar*age2 +  d2$Iri + d2$Yrk + x$Bzr*d2$z + x$Bzr2*d2$z^2 +  d2$N*x$Gr +  x$BZr*d2$z_bar + x$BZnr*d2$N*d2$z_bar + x$Bznr*d2$N*d2$z  + x$BZzr*d2$z*d2$z_bar+ x$BZznr*d2$z*d2$z_bar*d2$N + Es[,2]  
+        d2$recruits<-rpois(length(d2$rm), exp(d2$rm))
+       
+        d2$w<-d2$recruits + d2$surv
+        d2$rw<-d2$w/mean(d2$w)
+        
+        dyears[[i]]<-d2
+        
+        pop$sim[i]<-x$sim ##Simulation ID
+        pop$N0[i]<-sum(dtmp$recruits)
+        pop$N1[i]<-sum(dtmp$surv)
+        pop$N[i]<- sum(dtmp$recruits + dtmp$surv)
+        pop$lambda[i]<- sum(d2$recruits + d2$surv)/pop$N[i]
+        pop$z[i]<-d2$z_bar[1]
+        pop$deltaz[i]<-mean(d2$z)+cov(d2$z, d2$rw) ##Expected change in mean phenotype
+              }
+    }, error=function(e){})
+  
+    ##Combine individual data for all years
+    dtmp1<-do.call(rbind.data.frame, dyears)
+    dtmp1$sim<-x$sim ##Simulation ID
+    dAll$IndData<-dtmp1 ##Get it into a list
+    dAll$PopData<-pop ##Get population data into a list
+    dAll
+    }
+
+
+##Creates a list of parameter values for the simulations to use lapply to generate all simulations
+sim.pops<-function(n.years=10, n.sims=1, s, r, VYs=0, VYr=0, VYrs=0, VIs=0, VIr=0, VIrs=0, h2r=0, h2s=0, h2rs=0, Vss=0, Vsr=0, Vsrs=0, Gs=0, Gr=0, N0=10, N1=10, ar=0, as=0, Bzr=0, Bzr2=0, Bzs=0, BZr=0, BZs=0, BZnr=0, BZns=0, Bznr=0, Bzns=0, BZzr=0,  BZzs=0, BZznr=0,  BZzns=0 )
+{  
+lists<-list()
+d<-list()
+
+for(j in 1:n.sims){
+lists[[j]]<-data.frame(n.years=n.years, s=s, r=r, VYs=VYs, VYr=VYr, VYrs=VYrs, VIs=VYrs, VIr=VIr, VIrs=VIrs, h2r=h2r, h2s=h2s, h2rs=h2rs, Vss=Vss, Vsr=Vsr, Vsrs=Vsrs, Gs=Gs, Gr=Gr, N0=N0, N1=N1, ar=ar, as=as, Bzr=Bzr, Bzr2=Bzr2, Bzs=Bzs, BZr=BZr, BZs=BZs, BZnr=BZnr, BZns=BZns, Bznr=Bznr, Bzns=Bzns, BZzr=BZzr,  BZzs=BZzs, BZznr=BZznr,  BZzns=BZzns, sim=j) 
+}    
+ 
+res<-mclapply(lists, sim2, mc.cores=4)
+d$Ind<-do.call(rbind.data.frame, lapply(res, '[[', 1))
+d$Pop<-do.call(rbind.data.frame, lapply(res, '[[', 2))
+d$Params<-as.data.frame(lists[1])
+d
+}
+
+```
+
