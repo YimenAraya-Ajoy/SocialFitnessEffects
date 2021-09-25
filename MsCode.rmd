@@ -25,8 +25,6 @@ cols=c("black", "darkgreen", "red")
 alpha=0.2
 ```
 
-IBsim() accepts as arguments a list x that contains all the parameter values to simulate, and iterates over n.years. The simulations are stored in lists so it is easier to parallelize later on. 
-
 ```{r FunctionSimulate, echo=FALSE}
 IBsim <- function(x){
   # initialize lists
@@ -262,7 +260,6 @@ IBsim <- function(x){
   }
 ```
 
-Function sim.pop() accepts a vector of all parameter values and number of simulations and iterates IBsim() over n.sims. It returns a list. 
 ```{r FunctionSimPops, echo=FALSE}
 
 sim.pops <- function(x, n.sims, n.Cores=detectCores()-1, seed=FALSE){  
@@ -286,8 +283,6 @@ make.dataframe<-function(x){
 
 ```
 
-A function to generate x (a data frame of parameter values). Function has set defaults so that it's easy to see what differs between scenarios. 
-All the parameter values we need for the simulations will be subset from x. 
 ```{r FunctionCreateX, echo=FALSE}
 # A function to calculate x. Function contains default values so that it is clear what is changing in each scenario. 
 # scenID is scenario ID
@@ -300,11 +295,6 @@ create.x <- function(scenID, n.years=200, s=-0.1, r=0.1, Bns=0, Bnr=-0.01, nJ=10
              Bznr=Bznr, Bzns=Bzns, BZzr=BZzr, BZzs=BZzs, BZznr=BZznr, BZzns=BZzns)
 }
 ```
-
-
-Functions for analyzing the data:
-
-This function combines Nbar(), zbar() to calculate the average population size and mean phenotype for each year across simulations, and the proportion of simulations that went extinct. a, b, and c are the outputs from sim.pops() for three different scenarios. 
 
 ```{r FunctionCalcSimAvg, echo=FALSE}
 # this function combines functions Nbar() and zbar()
@@ -710,7 +700,7 @@ res
 
 
 # Scenario 1: Density regulation
-```{r S1_densityRegulation, cache=TRUE, echo=FALSE}
+```{r S1_densityRegulation, cache=TRUE}
 
 n.sims = 200
 #seed <- 705
@@ -739,7 +729,7 @@ pred1<-predict1(est1, 200)
 
 ```
 
-```{r, DensityRegulationFigure, echo=FALSE}
+```{r, DensityRegulationFigure3, echo=FALSE}
 p1.n <- ggplot(df1, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + geom_hline(data=est1, aes(yintercept = EN), colour=cols, linetype="dashed") 
   
 p1.z <- ggplot(df1, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) +   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + ylim(-4,4)
@@ -786,9 +776,8 @@ hist(ds1c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
-
 # Scenario 2: Selection
-```{r S2_Selection, cache=TRUE, echo=FALSE}
+```{r S2_Selection, cache=TRUE}
 
 n.sims = 200
 
@@ -813,7 +802,7 @@ pred2<-predict2(est2, 300)
 
 ```
 
-```{r, SelectionFigure, echo=FALSE}
+```{r, SelectionFigure3, echo=FALSE}
 p2.n <- ggplot(df2, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est2, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p2.z <- ggplot(df2, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
@@ -859,9 +848,8 @@ hist(ds2c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
-
 # Scenario 3: Social selection
-```{r S3_SocialSelection, cache=TRUE, echo=FALSE}
+```{r S3_SocialSelection, cache=TRUE}
 
 n.sims = 200
 
@@ -886,7 +874,7 @@ pred3<-predict3(est3, 300)
 
 ```
 
-```{r, SocialSelectionFigure, echo=FALSE}
+```{r, SocialSelectionFigure3, echo=FALSE}
 p3.n <- ggplot(df3, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est3, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p3.z <- ggplot(df3, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
@@ -935,9 +923,8 @@ hist(ds3c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
-
 # Scenario 4: Phenotype Dependent Density Regulation
-```{r S4_PhenotypeDependentDensityRegulation, cache=TRUE, echo=FALSE}
+```{r S4_PhenotypeDependentDensityRegulation, cache=TRUE}
 
 n.sims = 200
 
@@ -967,7 +954,7 @@ pred4<-predict4(est4, 300)
 
 ```
 
-```{r, PhenotypeDependentDensityRegulationFigure, echo=FALSE}
+```{r, PhenotypeDependentDensityRegulationFigure3, echo=FALSE}
 p4.n <- ggplot(df4, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est4, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p4.z <- ggplot(df4, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
@@ -1015,19 +1002,9 @@ hist(ds4c$Pop$N, freq=FALSE, xlab="Population size", main="")
 
 ```
 
-```{r, Figure3, echo=FALSE}
-
-pdf("/home/yi/Dropbox/SocialFitnessEffects/Figures/Fig3.pdf", height= 16, width=12)
-
-ggarrange(p1.n, p1.z, p1.w, p2.n, p2.z, p2.w, p3.n, p3.z, p3.w, p4.n, p4.z, p4.w,ncol=3, nrow=4) 
-
-dev.off()
-```
-
-
 
 # Scenario 5: Density Dependent selection
-```{r S5_DensityDependentSelection, cache=TRUE, echo=FALSE}
+```{r S5_DensityDependentSelection, cache=TRUE}
 
 n.sims = 200
 #seed <- 705
@@ -1059,7 +1036,7 @@ pred5<-predict5(est5, 300)
 
 ```
 
-```{r, DensityDependentSelectionFigure, echo=FALSE}
+```{r, DensityDependentSelectionFigure4, echo=FALSE}
 p5.n <- ggplot(df5, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est5, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p5.z <- ggplot(df5, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) +
@@ -1076,6 +1053,54 @@ p5.w <- ggplot(pred5, aes(n, w, colour=scenID)) + geom_line()  + theme_classic()
 labels=c( bquote(paste("b"[Nz], "=", .(s5a.x$Bznr))), bquote(paste("b"[Nz], "=", .(s5b.x$Bznr))),bquote(paste("b"[Nz], "=", .(s5c.x$Bznr)))))
 
 ggarrange(p5.n, p5.z, p5.w,ncol=3, nrow=1) 
+```
+
+```{r, DensityDependentSelectionFigure5, echo=FALSE}
+
+x<-as.data.frame(bias5)
+n<-seq(1,50)  
+z<-seq(-2,2, by=0.1)
+zz<-expand.grid(n,z)
+colnames(zz)<-c("n", "z")
+
+w1=x$B1[1] + x$Bn[1]*x$EN[1] + x$Bq[1]*x$Vz[1] +  (x$Bl[1] + x$Bzn[1]*zz[,"n"])*zz[,"z"] + x$Bq[1]*zz[,"z"]^2
+rw<-w1/mean(w1)
+
+p3d1<-cloud(rw~zz[,"n"]*zz[,"z"], xlab="n", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(0.6,1.4),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="(A)")
+
+w2=x$B1[2] + x$Bn[2]*x$EN[2] + x$Bq[2]*x$Vz[2] + (x$Bl[2] + x$Bzn[2]*zz[,"n"])*zz[,"z"] + x$Bq[2]*zz[,"z"]^2
+rw<-w1/mean(w1)
+
+p3d2<-cloud(w2~zz[,"n"]*zz[,"z"], xlab="n", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(0.6,1.4),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
+
+w3=x$B1[3] + x$Bn[3]*x$EN[2] + x$Bq[3]*x$Vz[3] + (x$Bl[3] + x$Bzn[3]*zz[,"n"])*zz[,"z"] + x$Bq[3]*zz[,"z"]^2
+
+p3d3<-cloud(w3~zz[,"n"]*zz[,"z"], xlab="n", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(0.6,1.4),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
+
+grid.arrange(p3d1,p3d2,p3d3, ncol=3, nrow=1)
+dev.off()
+
+
 ```
 
 ```{r, DensityDependentSelectionFigureS1, echo=FALSE}
@@ -1111,8 +1136,9 @@ hist(ds5c$Pop$N, freq=FALSE, xlab="Population size", main="")
 
 ```
 
+
 # Scenario 6: Frequency dependent selection
-```{r S6_FrequencyDependentSelection, cache=TRUE, echo=FALSE}
+```{r S6_FrequencyDependentSelection, cache=TRUE}
 
 n.sims = 200
 #seed <- 705
@@ -1138,7 +1164,7 @@ pred6<-predict6(est6, 300)
 
 ```
 
-```{r, FrequencyDependentSelectionFigure, echo=FALSE}
+```{r, FrequencyDependentSelectionFigure4, echo=FALSE}
 p6.n <- ggplot(df6, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est6, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p6.z <- ggplot(df6, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
@@ -1153,6 +1179,49 @@ p6.w <- ggplot(pred6, aes(n, w, colour=scenID)) + geom_line()  + theme_classic()
 labels=c( bquote(paste("b"[paste(bar(z),z)], "=", .(s6a.x$BZzr))), bquote(paste("b"[paste(bar(z),z)], "=", .(s6b.x$BZzr))),bquote(paste("b"[paste(bar(z),z)], "=", .(s6c.x$BZzr)))))
 
 ggarrange(p6.n, p6.z, p6.w,ncol=3, nrow=1) 
+```
+
+```{r, FrequencyDependentSelectionFigure5, echo=FALSE}
+
+x<-as.data.frame(bias6)
+z<-seq(-4, 10, by=0.2)
+zz<-expand.grid(z,z)
+colnames(zz)<-c("z", "z'")
+
+w1=x$B1[1] + x$Bn[1]*x$EN[1] + x$Bq[1]*x$Vz[1] + x$Bz[1]*zz[,"z'"] +  (x$Bl[1] + x$Bzz[1]*zz[,"z"])*zz[,"z'"] + x$Bq[1]*zz[,"z"]^2
+rw<-w1/mean(w1)
+
+p3d4<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="(B)")
+
+w2=x$B1[2] + x$Bn[2]*x$EN[2] + x$Bq[2]*x$Vz[2] + x$Bz[2]*zz[,"z'"] +  (x$Bl[2] + x$Bzz[2]*zz[,"z"])*zz[,"z'"] + x$Bq[2]*zz[,"z"]^2
+rw<-w2/mean(w2)
+
+p3d5<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
+
+w3=x$B1[3] + x$Bn[3]*x$EN[3] + x$Bq[3]*x$Vz[3] + x$Bz[3]*zz[,"z'"] +  (x$Bl[3] + x$Bzz[3]*zz[,"z"])*zz[,"z'"] + x$Bq[3]*zz[,"z"]^2
+rw<-w3/mean(w3)
+
+p3d6<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
 ```
 
 ```{r, FrequencyDependentSelectionFigureS1, echo=FALSE}
@@ -1186,7 +1255,7 @@ hist(ds3c$Pop$N, freq=FALSE, xlab="Population size", main="")
 
 
 # Scenario 7: Frequency-density dependent selection
-```{r S6_FrequencyDensityDependentSelection, cache=TRUE, echo=FALSE}
+```{r S6_FrequencyDensityDependentSelection, cache=TRUE}
 n.sims = 200
 
 s7a.x <- create.x(scenID="7a", n.years=200, Bnr=-0.02, Bzr= 0.15, Bzr2=-0.02, BZr=-0.03, BZnr= -0.001, BZznr= 0)
@@ -1210,7 +1279,7 @@ pred7<-predict7(est7, 300)
 
 ```
 
-```{r, FrequencyDensityDependentSelectionFigure, echo=FALSE}
+```{r, FrequencyDensityDependentSelectionFigure4, echo=FALSE}
 p7.n <- ggplot(df7, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,50) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est7, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p7.z <- ggplot(df7, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est7, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -1224,6 +1293,52 @@ p7.w <- ggplot(pred7, aes(n, w, colour=scenID)) + geom_line()  + theme_classic()
 labels=c( bquote(paste("b"[paste(bar(z),n,z)], "=", .(s7a.x$BZznr))), bquote(paste("b"[paste(bar(z),n,z)], "=", .(s7b.x$BZznr))),bquote(paste("b"[paste(bar(z),n,z)], "=", .(s7c.x$BZznr)))))
 
 ggarrange(p7.n, p7.z, p7.w,ncol=3, nrow=1) 
+```
+
+```{r, FrequencyDensityDependentSelectionFigure5, echo=FALSE}
+
+x<-as.data.frame(bias6)
+z<-seq(-4, 10, by=0.2)
+zz<-expand.grid(z,z)
+colnames(zz)<-c("z", "z'")
+
+w1=x$B1[1] + x$Bn[1]*x$EN[1] + x$Bq[1]*x$Vz[1] + x$Bz[1]*zz[,"z'"] +  (x$Bl[1] + x$Bzz[1]*zz[,"z"])*zz[,"z'"] + x$Bq[1]*zz[,"z"]^2
+rw<-w1/mean(w1)
+
+p3d4<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="(B)")
+
+w2=x$B1[2] + x$Bn[2]*x$EN[2] + x$Bq[2]*x$Vz[2] + x$Bz[2]*zz[,"z'"] +  (x$Bl[2] + x$Bzz[2]*zz[,"z"])*zz[,"z'"] + x$Bq[2]*zz[,"z"]^2
+rw<-w2/mean(w2)
+
+p3d5<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
+
+w3=x$B1[3] + x$Bn[3]*x$EN[3] + x$Bq[3]*x$Vz[3] + x$Bz[3]*zz[,"z'"] +  (x$Bl[3] + x$Bzz[3]*zz[,"z"])*zz[,"z'"] + x$Bq[3]*zz[,"z"]^2
+rw<-w3/mean(w3)
+
+p3d6<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+          colorkey = FALSE, zlim=c(-1,3),
+          screen = list(z = 60, x = -60), 
+          scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
+           aspect = c(1.1, 1),
+          drape = TRUE,
+          par.settings = list(axis.line = list(col = "transparent")), main="")
+
+
+
+
 ```
 
 ```{r, FrequencyDensityDependentSelectionFigureS1, echo=FALSE}
@@ -1256,3 +1371,30 @@ hist(ds7c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+# Manuscript figures
+
+```{r Figure3, echo=FALSE}
+
+pdf("/home/yi/Dropbox/SocialFitnessEffects/Figures/Fig3.pdf", height= 16, width=12)
+
+ggarrange(p1.n, p1.z, p1.w, p2.n, p2.z, p2.w, p3.n, p3.z, p3.w, p4.n, p4.z, p4.w,ncol=3, nrow=4) 
+
+dev.off()
+```
+
+```{r Figure4, echo=FALSE}
+pdf("/home/yi/Dropbox/SocialFitnessEffects/Figures/Fig4.pdf", height= 12, width=16)
+
+ggarrange(p5.n, p5.z, p5.w, p6.n, p6.z, p6.w, p7.n, p7.z, p7.w, ncol=3, nrow=3, widths=c(1,1,1)) 
+
+dev.off()
+```
+
+```{r Figure5, echo=FALSE}
+pdf("Figures/Fig5.pdf", height= 12, width=12)
+
+grid.arrange(p3d1,p3d2,p3d3,p3d4,p3d5,p3d6,p3d7, p3d8, p3d9, ncol=3, nrow=3)
+
+dev.off()
+
+```
