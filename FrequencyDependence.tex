@@ -65,19 +65,19 @@ Here we provide a statistical decomposition of the various types of social inter
 
 We used individual-based eco-evolutionary simulations to study how selection and density regulation interact to determine a population's size and its mean phenotype. These simulations are based on explicitly modeling the sources of variation in survival and reproduction with equations that mirror the generalized linear model that can be used to quantify these patterns empirically. The resulting data can thus be used to illustrate how reproduction and survival are affected by a range of regression parameters representing different processes causing variation in fitness within selection episodes (e.g. among individuals) and processes causing variation in mean fitness across selection episodes (e.g. among years). The basic features of the individual based simulation are that density regulation results in that the average fitness of the population decreases with population size and that an individual's fitness can be affected by its own phenotype and the phenotype of the other indivdiuals in the population. Interactions between these different processes will have direct consequences on the equilibrium population size and mean phenotype. 
 
-The number of recruits an individual produces is modeled as a Poisson process, where the number of offspring produced by an individual that recruit to the next generation in a given year is a function of the average population-level reproduction when population size is very small, $R_0$, and any population size effects on mean fitness described by the density regulation coefficient $b_{n}$. This coefficient ($b_{n}$) will always be negative, reflecting the strength of density regulation that limits the growth of the population.  The number of recruits an individual produces can also depend upon its phenotype, following a quadratic fitness function representing stabilizing selection for an optimal phenotypic value. This function is defined by the linear ($b_z$) and quadratic ($b_q$) effects of the phenotype on recruit production. This phenotype is also heritable so it can evolve in response to selection. For simplicity we assume that the additive genetic variation in the trait equals to one and that environmental variation does not affect the phenotype. When adaptation occurs, the mean fitness of the population increases, and so population size increases until the population mean phenotype matches the optimum phenotype (Figure 3B). All other unmodeled sources of (residual) variation that affect the reproduction of an individual are represented by $\vectorsym{e}$. Adult survival from one given year to the next ($\vectorsym{s}$) is modeled as a Bernoulli process. For simplicity, we assume that survival is not affected by an individual's phenotype or the number or phenotype of the other individuals in its social environment. Thus the average survival propensity $\bar{p}$, defines the survival probability for all adult individuals across all breeding episodes. Hence,
+The number of recruits an individual produces is modeled as a Poisson process, where the number of offspring produced by an individual that recruit to the next generation in a given year is a function of the average population-level reproduction when population size is very small, $R_0$, and any population size effects on mean fitness described by the density regulation coefficient $b_{n}$. This coefficient ($b_{n}$) will always be negative, reflecting the strength of density regulation that limits the growth of the population.  The number of recruits an individual produces can also depend upon its phenotype, following a quadratic fitness function representing stabilizing selection for an optimal phenotypic value. This function is defined by the linear ($b_z$) and quadratic ($b_q$) effects of the phenotype on recruit production. This phenotype is also heritable so it can evolve in response to selection. For simplicity we assume that the additive genetic variation in the trait equals to one and that environmental variation does not affect the phenotype. When adaptation occurs, the mean fitness of the population increases, and so population size increases until the population mean phenotype matches the optimum phenotype (Figure 3B). All other unmodeled sources of (residual) variation that affect the reproduction of an individual are represented by $\mathbf{e}$. Adult survival from one given year to the next ($\mathbf{s}$) is modeled as a Bernoulli process. For simplicity, we assume that survival is not affected by an individual's phenotype or the number or phenotype of the other individuals in its social environment. Thus the average survival propensity $\bar{p}$, defines the survival probability for all adult individuals across all breeding episodes. Hence,
 
 \begin{subequations} 
 \begin{gather}
-\vectorsym{r}\sim Poisson(e^{R_{0} + b_{n} \vectorsym{n} + b_{z} \vectorsym{z} + b_{q} \vectorsym{z^2} + \vectorsym{e}}), \label{eq:1a} \\
-\vectorsym{s}\sim Bern(\frac{1}{e^{\bar{p}}}). \label{eq:1b}
+\mathbf{r}\sim Poisson(e^{R_{0} + b_{n} \mathbf{n} + b_{z} \mathbf{z} + b_{q} \mathbf{z^2} + \mathbf{e}}), \label{eq:1a} \\
+\mathbf{s}\sim Bern(\frac{1}{e^{\bar{p}}}). \label{eq:1b}
 \end{gather}
 \end{subequations}
 
 To simulate the different scenarios we gradually extended these equations to capture the different social processes that affect the fitness of individuals. For simplicity we only focus on the females of a population of size $n_{1}$. While this simplification is common when studying population dynamics, it overlooks key social processes, but it will help in the clarity of the results presented here. Individual fitness for these females is simulated as a function of variatios in equations \ref{eq:1a} and \ref{eq:1b}. The population size the next year is a function of the individuals that survive, plus the new recruits produced by individuals breeding in the previous generation:
 
 \begin{equation}
-n_{t+1}=\sum \vectorsym{s_{t}} + \vectorsym{r_{t}}=\bar{w_{t}}n_{t}, 
+n_{t+1}=\sum \mathbf{s_{t}} + \mathbf{r_{t}}=\bar{w_{t}}n_{t}, 
 \end{equation}
 
 \noindent where the mean fitness of the population $\bar{w_{t}}$ at time $t$  multiplied by the population size at time $n_{t}$ produces the expected population size at time $t + 1$. 
@@ -102,10 +102,10 @@ We tested for possible systematic biases in the statistical estimates for the ex
 In order to present the results in a more succinct manner, we describe scenario 1 and 2 together. The multiple regression equation describing the statistical analyzes for these scenario is:
 
 \begin{equation} \label{eq:fitness1}
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z} + \beta_{q} \vectorsym{z}^2 + \vectorsym{\epsilon},
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z} + \beta_{q} \mathbf{z}^2 + \mathbf{\epsilon},
 \end{equation}
 
-\noindent where $\vectorsym{w}$ is a vector describing the fitness of individuals. $\beta_{0}$ is the expected average individual fitness when the population size is zero or very small. In the context of a multiple regression, $\beta_{0}$ is thus a constant estimated as the intercept in the model, if population size is not mean centered. How an increase in one individual in the population will affect the fitness of individuals is described by the density regulation coefficient $\beta_{n}$, where $\vectorsym{n}$ is a vector of population sizes experienced by each individual. We also include the effect of phenotypes on fitness assuming that the fitness function can be described by a quadratic relationship between the trait and fitness. We thus need to include the coefficients $\beta_{z}$ and $\beta_{q}$ when describing the non-linear relationship between the phenotypic value ($\vectorsym{z}$) and absolute fitness ($\vectorsym{w}$). All other 'unmeasured' processes affecting the fitness of individuals in a given year are represented by $ \vectorsym{\epsilon}$. In a statistical sense, this constitutes the 'residual' unexplained variation in individual fitness. It is important to note here that $\vectorsym{w}$ and $\vectorsym{e}$ vary among individuals and among reproductive episodes, while only $\vectorsym{n}$ varies among reproductive episodes (e.g. years).
+\noindent where $\mathbf{w}$ is a vector describing the fitness of individuals. $\beta_{0}$ is the expected average individual fitness when the population size is zero or very small. In the context of a multiple regression, $\beta_{0}$ is thus a constant estimated as the intercept in the model, if population size is not mean centered. How an increase in one individual in the population will affect the fitness of individuals is described by the density regulation coefficient $\beta_{n}$, where $\mathbf{n}$ is a vector of population sizes experienced by each individual. We also include the effect of phenotypes on fitness assuming that the fitness function can be described by a quadratic relationship between the trait and fitness. We thus need to include the coefficients $\beta_{z}$ and $\beta_{q}$ when describing the non-linear relationship between the phenotypic value ($\mathbf{z}$) and absolute fitness ($\mathbf{w}$). All other 'unmeasured' processes affecting the fitness of individuals in a given year are represented by $ \mathbf{\epsilon}$. In a statistical sense, this constitutes the 'residual' unexplained variation in individual fitness. It is important to note here that $\mathbf{w}$ and $\mathbf{e}$ vary among individuals and among reproductive episodes, while only $\mathbf{n}$ varies among reproductive episodes (e.g. years).
 
 In the first scenario where there is only density regulation (Figure 2A) and there was no effect of the phenotype on fitness, as expected, the mean phenotype in the population does not change across time (Figure 3A middle panel). However it is clear that varying the strength of the coefficient determining density regulation, had direct consequences to the equilibrium population size (left hand-side panel Figure 3A), through its effects on the relation between population size and mean fitness (right hand-side panel Figure 3A). The expected equilibrium population size can be estimated by rearranging the relevant coefficients of equation \ref{eq:fitness1}.
 
@@ -128,7 +128,7 @@ n'=-\frac{\beta_{0}+ \beta_{z}\theta + \beta_{q}\theta^2-1}{\beta_n} = -\frac{\b
 We now focus on the scenario where the fitness of an individual is affected not only by its own phenotype but by the phenotype of the other individuals in the social environment (depicted in Figure 2C). We assume that individuals interact at random with equal probability with the other individuals in the population, and thus the effects of the phenotype of the individuals in the social envrionment on an individual's own fitness can be captured by including the effect of the mean phenotype in the social environment $\bar{z}$ on the fitness of individuals as another parameter in the multiple regression described in equation 3. This effect is captured by the coefficient $\beta_{\bar{z}}$:  
 
 \begin{equation} \label{eq: socialselection}
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z}+ \beta_{\bar{z}} \bar{\vectorsym{z}}+ \vectorsym{e}.
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z}+ \beta_{\bar{z}} \bar{\mathbf{z}}+ \mathbf{e}.
 \end{equation}
  
 \noindent Rearranging equation \ref{eq:equilibrium1} to find the equilibrium population size:
@@ -145,13 +145,13 @@ These scenarios of social selection alongside the (additive) effects of density 
 
 \subsection{Phenotype-dependent density regulation (S4)}
 
-By extending the linear regression equation once more to include the coefficient $\beta_{n \bar{z}}$ describing phenotype-dependent density regulation as the effect on fitness of the interaction between population size $\vectorsym{n}$ and the mean phenotype $\bar{\vectorsym{z}}$ in the population, we get: 
+By extending the linear regression equation once more to include the coefficient $\beta_{n \bar{z}}$ describing phenotype-dependent density regulation as the effect on fitness of the interaction between population size $\mathbf{n}$ and the mean phenotype $\bar{\mathbf{z}}$ in the population, we get: 
 
 \begin{equation} \label{eq: PDDR}
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z}+ \beta_{\bar{z}} \bar{\vectorsym{z}} + \beta_{\bar{z}n} \bar{\vectorsym{z}} \vectorsym{n}  +  \vectorsym{e}.
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z}+ \beta_{\bar{z}} \bar{\mathbf{z}} + \beta_{\bar{z}n} \bar{\mathbf{z}} \mathbf{n}  +  \mathbf{e}.
 \end{equation}
 
-An alternative way to think about this processes is to model density regulation via a new quantity determined by the product of the number of individuals and the mean phenotype in the population $\bar{\vectorsym{z}}\vectorsym{n}$ \citep{Engen2020}. However, for the purposes of the multiple regression analysis, the inclusion of the interaction term ($\beta_{\bar{z}n}$) defines the coefficient ($\beta_{n}$) as the relationship between population size and fitness when the mean phenotype of the population is zero. The coefficient $ \beta_{\bar{z}}$ then represents the effect of the average phenotype in the population on individual fitness when the population size is zero. 
+An alternative way to think about this processes is to model density regulation via a new quantity determined by the product of the number of individuals and the mean phenotype in the population $\bar{\mathbf{z}}\mathbf{n}$ \citep{Engen2020}. However, for the purposes of the multiple regression analysis, the inclusion of the interaction term ($\beta_{\bar{z}n}$) defines the coefficient ($\beta_{n}$) as the relationship between population size and fitness when the mean phenotype of the population is zero. The coefficient $ \beta_{\bar{z}}$ then represents the effect of the average phenotype in the population on individual fitness when the population size is zero. 
 
 Rearranging equation \ref{eq: PDDR}, we can see that the expected equilibrium population size ($n'$) now depends upon the (equilibrium) mean phenotype ($\bar{z}'$) of the population in yet another way:
 
@@ -169,7 +169,7 @@ Thus far we have assumed that the equilibrium phenotype is not dependent upon th
  Here we define frequency-dependent selection II as any processes that results in interactive effects on fitness of an individual's own phenotype and the phenotype of its social environment \citep{Araya-Ajoy2020}. This is captured by the additional coefficient $\beta_{\bar{z}z}$, representing the interaction between an individual's own phenotype and the mean phenotype in the population:  
 
 \begin{equation} \label{eq: FDS}
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z}+ \beta_{\bar{z}} \vectorsym{\bar{z}}  + \beta_{\bar{z}z} \vectorsym{z\bar{z}}  +  \vectorsym{e}.
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z}+ \beta_{\bar{z}} \mathbf{\bar{z}}  + \beta_{\bar{z}z} \mathbf{z\bar{z}}  +  \mathbf{e}.
 \end{equation}
 
 \noindent Here we used the individual based simulations to study negative frequency-dependent selection (Fig. \ref{fig:surface}B), which game theory predicts should result in mixed (i.e. polymorphic) evolutionary stable strategies or ESSs. In the presence of negative frequency-dependent selection, the equilibrium phenotype is not only a function of the quadratic fitness function, but it is also affected by the frequency-dependent selection coefficient:
@@ -190,7 +190,7 @@ n' = -\frac{(\beta_{z}   + \beta_{\bar{z}})\bar{z}' + (\beta_{q} + \beta_{\bar{z
  For simplicity we also studied density-dependent selection, without including frequency dependent selection. The regression equation thus focuses only on the inclusion of the coefficient $\beta_{nz}$ (Fig. \ref{fig:surface}A), thereby modeling the interaction effect between the number of individuals in the social environment and the individual's phenotype on its own fitness:
 
 \begin{equation} \label{eq: DDRS}
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z}+  \beta_{zn} \vectorsym{zn}  +  \vectorsym{e}.
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z}+  \beta_{zn} \mathbf{zn}  +  \mathbf{e}.
 \end{equation}
 
 \noindent Density-dependent selection closely connects the equilibrium mean phenotype and the equilibrium population size of the population, because now the equilibrium phenotype in the population depends upon population size:
@@ -212,7 +212,7 @@ and the equilibrium size of the population depends upon the equilibrium phenotyp
 To fully capture the the different ways that social traits can influence density regulation, we need to further include a three-way interaction in the multiple regression model on individual fitness:
 
 \begin{equation} 
-\vectorsym{w}=\beta_{0} +\beta_{n} \vectorsym{n} + \beta_{z} \vectorsym{z}+ \beta_{\bar{z}} \vectorsym{\bar{z}}  +   \beta_{\bar{z}n} \vectorsym{\bar{z}n} +   \beta_{zn} \vectorsym{zn} + \beta_{\bar{z}z} \vectorsym{\bar{z}z}   +   \beta_{\bar{z}zn} \vectorsym{z\bar{z}n} + \vectorsym{e}.
+\mathbf{w}=\beta_{0} +\beta_{n} \mathbf{n} + \beta_{z} \mathbf{z}+ \beta_{\bar{z}} \mathbf{\bar{z}}  +   \beta_{\bar{z}n} \mathbf{\bar{z}n} +   \beta_{zn} \mathbf{zn} + \beta_{\bar{z}z} \mathbf{\bar{z}z}   +   \beta_{\bar{z}zn} \mathbf{z\bar{z}n} + \mathbf{e}.
 \end{equation}
 
 \noindent We have now reached the most complex form of this regression equation, which includes all of the different parameters discussed (see Table 1). Here the coefficient $\beta_{n\bar{z}z}$ captures how the effect of population density on an individual's fitness depends upon the mean phenotype of other individuals in the social environment and how this social effect, in turn, depends upon the individual's own phenotype (Fig. \ref{fig:surface}C). Following the example (above) of density regulation acting through body size, the effect of the collective population biomass on an individual's fitness may also depend upon the individual's own body size (e.g. due to contest competition). The equilibrium phenotype of the population thus depends upon the equilibrium population size: 
@@ -260,11 +260,11 @@ Density-dependent selection is the simplest form of eco-evolutionary feedback be
 			
 			Parameter & Description \\ 
 			\hline
-			$\vectorsym{z}$        & Vector of individual phenotype \\ 
-			$\bar{\vectorsym{z}}$  & Vector of average yearly phenotype of a population\\ 
-			$\vectorsym{w}$        & Vector of individual fitness \\ 
-			$\bar{\vectorsym{w}}$  & Vector of average yearly fitness of a population\\ 
-			$\vectorsym{n}$        & Vector of population sizes \\ 
+			$\mathbf{z}$        & Vector of individual phenotype \\ 
+			$\bar{\mathbf{z}}$  & Vector of average yearly phenotype of a population\\ 
+			$\mathbf{w}$        & Vector of individual fitness \\ 
+			$\bar{\mathbf{w}}$  & Vector of average yearly fitness of a population\\ 
+			$\mathbf{n}$        & Vector of population sizes \\ 
 			$\beta_n$              & Density regulation coefficient \\ 
 			$\beta_z$              & Linear selection coefficient, relating phenotype with absolute fitness \\ 
 			$\beta_q$              & Quadratic selection coefficient, relating phenotype with absolute fitness \\ 
