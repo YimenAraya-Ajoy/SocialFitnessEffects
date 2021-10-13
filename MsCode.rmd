@@ -1,3 +1,4 @@
+
 ---
 title: "Code for paper"
 author: "Yimen"
@@ -698,7 +699,6 @@ res
 
 ```
 
-
 # Scenario 1: Density regulation
 ```{r S1_densityRegulation, cache=TRUE}
 
@@ -730,7 +730,7 @@ pred1<-predict1(est1, 200)
 ```
 
 ```{r, DensityRegulationFigure3, echo=FALSE}
-p1.n <- ggplot(df1, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + geom_hline(data=est1, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p1.n <- ggplot(df1, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A) Density regulation", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + geom_hline(data=est1, aes(yintercept = EN), colour=cols, linetype="dashed") 
   
 p1.z <- ggplot(df1, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) +   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + ylim(-4,4)
 
@@ -776,6 +776,8 @@ hist(ds1c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
+
 # Scenario 2: Selection
 ```{r S2_Selection, cache=TRUE}
 
@@ -803,7 +805,7 @@ pred2<-predict2(est2, 300)
 ```
 
 ```{r, SelectionFigure3, echo=FALSE}
-p2.n <- ggplot(df2, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est2, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p2.n <- ggplot(df2, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="B) Selection", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est2, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p2.z <- ggplot(df2, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est2, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -848,6 +850,7 @@ hist(ds2c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
 # Scenario 3: Social selection
 ```{r S3_SocialSelection, cache=TRUE}
 
@@ -875,7 +878,7 @@ pred3<-predict3(est3, 300)
 ```
 
 ```{r, SocialSelectionFigure3, echo=FALSE}
-p3.n <- ggplot(df3, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est3, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p3.n <- ggplot(df3, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="C) Social selection", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est3, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p3.z <- ggplot(df3, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est3, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -923,6 +926,7 @@ hist(ds3c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
 # Scenario 4: Phenotype Dependent Density Regulation
 ```{r S4_PhenotypeDependentDensityRegulation, cache=TRUE}
 
@@ -955,7 +959,7 @@ pred4<-predict4(est4, 300)
 ```
 
 ```{r, PhenotypeDependentDensityRegulationFigure3, echo=FALSE}
-p4.n <- ggplot(df4, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est4, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p4.n <- ggplot(df4, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="D) Phenotype-dep. density regulation", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est4, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p4.z <- ggplot(df4, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est4, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -1003,6 +1007,7 @@ hist(ds4c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
 # Scenario 5: Density Dependent selection
 ```{r S5_DensityDependentSelection, cache=TRUE}
 
@@ -1037,7 +1042,7 @@ pred5<-predict5(est5, 300)
 ```
 
 ```{r, DensityDependentSelectionFigure4, echo=FALSE}
-p5.n <- ggplot(df5, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est5, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p5.n <- ggplot(df5, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A) Density-dep selection", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5))  +   geom_hline(data=est5, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p5.z <- ggplot(df5, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) +
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est5, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -1057,7 +1062,7 @@ ggarrange(p5.n, p5.z, p5.w,ncol=3, nrow=1)
 
 ```{r, DensityDependentSelectionFigure5, echo=FALSE}
 
-x<-as.data.frame(bias5)
+x<-as.data.frame(est5)
 n<-seq(1,50)  
 z<-seq(-2,2, by=0.1)
 zz<-expand.grid(n,z)
@@ -1137,6 +1142,7 @@ hist(ds5c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
 # Scenario 6: Frequency dependent selection
 ```{r S6_FrequencyDependentSelection, cache=TRUE}
 
@@ -1165,7 +1171,7 @@ pred6<-predict6(est6, 300)
 ```
 
 ```{r, FrequencyDependentSelectionFigure4, echo=FALSE}
-p6.n <- ggplot(df6, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est6, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p6.n <- ggplot(df6, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="B) Frequency-dep selection", x="Year", y = "N") + ylim(0,100) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est6, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p6.z <- ggplot(df6, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + 
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est6, aes(yintercept = Ez), colour=cols, linetype="dashed") 
@@ -1183,7 +1189,7 @@ ggarrange(p6.n, p6.z, p6.w,ncol=3, nrow=1)
 
 ```{r, FrequencyDependentSelectionFigure5, echo=FALSE}
 
-x<-as.data.frame(bias6)
+x<-as.data.frame(est6)
 z<-seq(-4, 10, by=0.2)
 zz<-expand.grid(z,z)
 colnames(zz)<-c("z", "z'")
@@ -1225,7 +1231,7 @@ p3d6<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expressio
 ```
 
 ```{r, FrequencyDependentSelectionFigureS1, echo=FALSE}
-pd3<-popdyn3(est3, 25)
+pd3<-popdyn6(est6, 25)
 
 ppd3a<-ggplot(pd3, aes(x = year, y = N, color=scenID)) + geom_point(show.legend = FALSE)+ scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N")  + 
   theme(axis.title.y = element_text(angle = 0, vjust=0.5)) + geom_line(data=pd3, aes(x = year, y = N2, color=scenID), linetype="dashed",show.legend = FALSE) + geom_line(data=pd3, aes(x = year, y = N3, color=scenID),show.legend = FALSE)
@@ -1254,6 +1260,7 @@ hist(ds3c$Pop$N, freq=FALSE, xlab="Population size", main="")
 ```
 
 
+
 # Scenario 7: Frequency-density dependent selection
 ```{r S6_FrequencyDensityDependentSelection, cache=TRUE}
 n.sims = 200
@@ -1280,7 +1287,7 @@ pred7<-predict7(est7, 300)
 ```
 
 ```{r, FrequencyDensityDependentSelectionFigure4, echo=FALSE}
-p7.n <- ggplot(df7, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="A)", x="Year", y = "N") + ylim(0,50) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est7, aes(yintercept = EN), colour=cols, linetype="dashed") 
+p7.n <- ggplot(df7, aes(year, Nbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="C) Density-frequency-dep selection", x="Year", y = "N") + ylim(0,50) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +  geom_hline(data=est7, aes(yintercept = EN), colour=cols, linetype="dashed") 
 
 p7.z <- ggplot(df7, aes(year, zbar, colour=scenID)) + geom_line(show.legend = FALSE) + scale_color_manual(values=cols) + theme_classic()  + labs(title="", x="Year", y = expression(bar(z))) + theme(axis.title.y = element_text(angle = 0, vjust=0.5)) +   geom_hline(data=est7, aes(yintercept = Ez), colour=cols, linetype="dashed") 
 
@@ -1297,26 +1304,28 @@ ggarrange(p7.n, p7.z, p7.w,ncol=3, nrow=1)
 
 ```{r, FrequencyDensityDependentSelectionFigure5, echo=FALSE}
 
-x<-as.data.frame(bias6)
-z<-seq(-4, 10, by=0.2)
-zz<-expand.grid(z,z)
-colnames(zz)<-c("z", "z'")
+x<-as.data.frame(est7)
+z<-seq(-4, 10, by=0.5)
+n<-seq(1,50, by=2)  
+zz<-expand.grid(z,z, n)
+colnames(zz)<-c("z", "z'", "n")
+n<-seq(1,50)  
 
-w1=x$B1[1] + x$Bn[1]*x$EN[1] + x$Bq[1]*x$Vz[1] + x$Bz[1]*zz[,"z'"] +  (x$Bl[1] + x$Bzz[1]*zz[,"z"])*zz[,"z'"] + x$Bq[1]*zz[,"z"]^2
+w1=x$B1[1] + x$Bn[1]*zz[,"n"] + x$Bl[1]*zz[,"z"] + x$Bq[1]*zz[,"z"]^2 + x$Bq[1]*x$Vz[1] + x$Bz[1]*zz[,"z'"] + x$BNZ[1]*zz[,"z'"]*zz[,"n"] + x$BNz[1]*zz[,"z"]*zz[,"n"] + x$BZz[1]*zz[,"z"]*zz[,"z'"] + x$BNZz[1]*zz[,"z"]*zz[,"z'"]*zz[,"n"]
 rw<-w1/mean(w1)
 
-p3d4<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+p3d7<-cloud(rw~zz[,"z"]*zz[,"z'"], group=zz[,"n"], xlab="n", ylab=expression(z), zlab=expression(w),
           colorkey = FALSE, zlim=c(-1,3),
           screen = list(z = 60, x = -60), 
           scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
            aspect = c(1.1, 1),
           drape = TRUE,
-          par.settings = list(axis.line = list(col = "transparent")), main="(B)")
+          par.settings = list(axis.line = list(col = "transparent")), main="(C)")
 
-w2=x$B1[2] + x$Bn[2]*x$EN[2] + x$Bq[2]*x$Vz[2] + x$Bz[2]*zz[,"z'"] +  (x$Bl[2] + x$Bzz[2]*zz[,"z"])*zz[,"z'"] + x$Bq[2]*zz[,"z"]^2
+w2=x$B1[2] + x$Bn[2]*zz[,"n"] + x$Bl[2]*zz[,"z"] + x$Bq[2]*zz[,"z"]^2 + x$Bq[2]*x$Vz[2] + x$Bz[2]*zz[,"z'"] + x$BNZ[2]*zz[,"z'"]*zz[,"n"] + x$BNz[2]*zz[,"z"]*zz[,"n"] + x$BZz[2]*zz[,"z"]*zz[,"z'"] + x$BNZz[2]*zz[,"z"]*zz[,"z'"]*zz[,"n"]
 rw<-w2/mean(w2)
 
-p3d5<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+p3d8<-cloud(rw~zz[,"z"]*zz[,"z'"], group=zz[,"n"], xlab="n", ylab=expression(z), zlab=expression(w),
           colorkey = FALSE, zlim=c(-1,3),
           screen = list(z = 60, x = -60), 
           scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
@@ -1324,22 +1333,18 @@ p3d5<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expressio
           drape = TRUE,
           par.settings = list(axis.line = list(col = "transparent")), main="")
 
-
-w3=x$B1[3] + x$Bn[3]*x$EN[3] + x$Bq[3]*x$Vz[3] + x$Bz[3]*zz[,"z'"] +  (x$Bl[3] + x$Bzz[3]*zz[,"z"])*zz[,"z'"] + x$Bq[3]*zz[,"z"]^2
+w3=x$B1[3] + x$Bn[3]*zz[,"n"] + x$Bl[3]*zz[,"z"] + x$Bq[3]*zz[,"z"]^2 + x$Bq[3]*x$Vz[3] + x$Bz[3]*zz[,"z'"] + x$BNZ[3]*zz[,"z'"]*zz[,"n"] + x$BNz[3]*zz[,"z"]*zz[,"n"] + x$BZz[3]*zz[,"z"]*zz[,"z'"] + x$BNZz[3]*zz[,"z"]*zz[,"z'"]*zz[,"n"]
 rw<-w3/mean(w3)
 
-p3d6<-cloud(rw~zz[,"z'"]*zz[,"z"], xlab="z'", ylab=expression(z), zlab=expression(w),
+p3d9<-cloud(rw~zz[,"z"]*zz[,"z'"], group=zz[,"n"], xlab="n", ylab=expression(z), zlab=expression(w),
           colorkey = FALSE, zlim=c(-1,3),
           screen = list(z = 60, x = -60), 
           scales = list( arrows = FALSE, col="black", cex.axis=0.8), 
            aspect = c(1.1, 1),
           drape = TRUE,
           par.settings = list(axis.line = list(col = "transparent")), main="")
-
-
-
-
 ```
+
 
 ```{r, FrequencyDensityDependentSelectionFigureS1, echo=FALSE}
 pd7<-popdyn7(est7, 25)
@@ -1369,6 +1374,7 @@ hist(ds7b$Pop$N, freq=FALSE, xlab="Population size", main="")
 hist(ds7c$Pop$N, freq=FALSE, xlab="Population size", main="")
 
 ```
+
 
 
 # Manuscript figures
